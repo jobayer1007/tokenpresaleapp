@@ -7,6 +7,7 @@ import { MoralisDappProvider } from './providers/MoralisDappProvider/MoralisDapp
 import { Web3ReactProvider } from '@web3-react/core';
 import { ethers } from 'ethers';
 import { appConfig } from './config/env';
+import { Web3Provider } from './providers/Web3Provider.jsx';
 
 // Ensure Buffer is available for libraries expecting Node globals
 if (typeof window !== 'undefined' && !window.Buffer) {
@@ -51,9 +52,11 @@ const Application = () => {
     >
       {!hasMoralisConfig && <MoralisConfigBanner />}
       <Web3ReactProvider getLibrary={getLibrary}>
-        <MoralisDappProvider>
-          <App />
-        </MoralisDappProvider>
+        <Web3Provider>
+          <MoralisDappProvider>
+            <App />
+          </MoralisDappProvider>
+        </Web3Provider>
       </Web3ReactProvider>
     </MoralisProvider>
   );

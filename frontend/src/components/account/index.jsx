@@ -1,11 +1,11 @@
-import { useWeb3React } from '@web3-react/core';
+import useWeb3 from '../../hooks/useWeb3.js';
 import Authenticated from './Authenticated';
 import Unauthenticated from './Unauthenticated';
 
 function Account() {
-  const { library, account } = useWeb3React();
+  const { provider, account } = useWeb3();
 
-  if (library) return <Authenticated library={library} account={account} />;
+  if (provider) return <Authenticated library={provider} account={account} />;
 
   return <Unauthenticated />;
 }

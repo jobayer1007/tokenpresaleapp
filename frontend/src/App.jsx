@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { useWeb3React } from '@web3-react/core';
+import useWeb3 from './hooks/useWeb3';
 import ERC20Balance from './components/ERC20Balance';
 import Home from './containers/home';
 import About from './containers/about';
@@ -16,12 +16,12 @@ import Mint from './containers/mint';
 import Stake from './containers/stake';
 
 const App = () => {
-  const { library, account } = useWeb3React();
+  const { provider, account } = useWeb3();
   useEffect(() => {
-    if (library) {
+    if (provider) {
       localStorage.setItem('connected', true);
     }
-  }, [library, account]);
+  }, [provider, account]);
 
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>

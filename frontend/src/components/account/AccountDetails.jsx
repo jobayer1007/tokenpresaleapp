@@ -1,7 +1,7 @@
 import CopyToClipboard from 'components/shared/CopyToClipboard.jsx';
 import { getEllipsisTxt } from '../../helpers/formatters.js';
 import { getExplorer } from '../../helpers/networks.js';
-import { useWalletConnector } from './WalletConnector.jsx';
+import useWeb3 from '../../hooks/useWeb3.js';
 
 const resetLocalStorage = () => {
   localStorage.removeItem('wallet');
@@ -9,10 +9,10 @@ const resetLocalStorage = () => {
 };
 
 const AccountDetails = ({ accountDetailsDialogOpen, handleAccountDetailsDialogToggle, data }) => {
-  const { logoutWalletConnector } = useWalletConnector();
+  const { disconnectWallet } = useWeb3();
 
   const handleLogout = () => {
-    logoutWalletConnector();
+    disconnectWallet();
     handleAccountDetailsDialogToggle();
     resetLocalStorage();
   };

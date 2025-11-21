@@ -1,6 +1,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { ethers } from 'ethers';
-import { useWeb3React } from '@web3-react/core';
+import useWeb3 from '../../../hooks/useWeb3.js';
 import PRESALE_ABI from '../../../contracts/presale.json';
 import Alert from '../../ui/Alert';
 import moment from 'moment';
@@ -24,17 +24,17 @@ const Opened = () => {
   const [alertMsg, setAlertMsg] = useState('');
   const [openAlert, setOpenAlert] = useState(false);
 
-  const { account, library } = useWeb3React();
+  const { account, provider } = useWeb3();
 
   const getNetwork = () => {
-    const current = normalizeChainId(library?.provider?.chainId || '');
+    const current = normalizeChainId(provider?.provider?.chainId || '');
     return chainConfig.presaleNetworks.find(
       (net) => normalizeChainId(net.key).toLowerCase() === current.toLowerCase()
     );
   };
 
   useEffect(() => {
-    if (!library) {
+    if (!provider) {
       resetState();
       return;
     }
@@ -48,7 +48,7 @@ const Opened = () => {
 
     getInfo(activeNet);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, library]);
+  }, [account, provider]);
 
   const resetState = () => {
     setAmountToBuy(1);
@@ -71,7 +71,7 @@ const Opened = () => {
       return null;
     }
 
-    const signer = await library.getSigner();
+    const signer = await provider.getSigner();
     const presalecontract = getContract(PRESALE_ABI, network.contractAddress, signer);
     const chainSuffix = network.currencyLabel || network.symbol;
 
@@ -220,7 +220,7 @@ const Opened = () => {
       setAlertMsg('Selected chain is unrecognized');
       return null;
     }
-    const signer = await library.getSigner();
+    const signer = await provider.getSigner();
     return getContract(PRESALE_ABI, activeNet.contractAddress, signer);
   };
 

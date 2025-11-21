@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useWeb3React } from '@web3-react/core';
-import { useWalletConnector, setNet } from './WalletConnector.jsx';
+import useWeb3 from '../../hooks/useWeb3.js';
 import { BinanceLogo, EthereumLogo } from '../ui/NetworkLogos.jsx';
 import { MetamaskLogo, WalletConnectLogo } from '../ui/WalletLogos.jsx';
 
@@ -22,17 +21,16 @@ const NetworkWalletProviders = ({
   walletProvidersDialogOpen,
   handleWalletProvidersDialogToggle,
 }) => {
-  const { library, account } = useWeb3React();
-  const { loginMetamask, loginWalletConnect } = useWalletConnector();
+  const { provider, connectInjected, connectWalletConnect } = useWeb3();
   const [selectedNetwork, setSelectedNetwork] = useState(null);
   const [selectedWallet, setSelectedWallet] = useState(null);
 
   useEffect(() => {
-    if (library) {
+    if (provider) {
       handleWalletProvidersDialogToggle();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [library, account]);
+  }, [provider]);
 
   const connectWallet = async (walletprovider) => {
     localStorage.setItem('connected', true);
@@ -40,23 +38,19 @@ const NetworkWalletProviders = ({
     switch (walletprovider) {
       case 'injected_eth':
         setWalletProvider('injected_eth');
-        setNet(0);
-        loginMetamask();
+        await connectInjected('eth');
         break;
       case 'walletconnect_eth':
         setWalletProvider('walletconnect_eth');
-        setNet(0);
-        loginWalletConnect();
+        await connectWalletConnect('eth');
         break;
       case 'injected_bsc':
         setWalletProvider('injected_bsc');
-        setNet(1);
-        loginMetamask();
+        await connectInjected('bsc');
         break;
       case 'walletconnect_bsc':
         setWalletProvider('walletconnect_bsc');
-        setNet(1);
-        loginWalletConnect();
+        await connectWalletConnect('bsc');
         break;
       default:
         return null;
