@@ -1,0 +1,24 @@
+{
+  "name": "tokenpresale-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "devchain": "node scripts/devChain.js",
+    "migrate": "truffle migrate --reset --compile-all --network develop",
+    "deploy": "node scripts/deployContract.js",
+    "truffle:test": "truffle test",
+    "hardhat:test": "hardhat test",
+    "contract:abi": "node scripts/contractInfo.js"
+  },
+  "dependencies": {
+    "chai": "^4.5.0",
+    "chai-as-promised": "^8.0.2",
+    "chai-bignumber": "^3.1.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "ganache-cli": "^6.12.2",
+    "hardhat": "^2.22.9",
+    "truffle": "^5.11.5"
+  }
+}
