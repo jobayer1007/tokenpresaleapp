@@ -16,6 +16,7 @@ import {
   UserRejectedRequestError as UserRejectedRequestErrorWalletConnect,
   WalletConnectConnector,
 } from '@web3-react/walletconnect-connector';
+import { ethers } from 'ethers';
 
 const NETWORKS = {
   eth: {
@@ -47,6 +48,7 @@ export function Web3Provider({ children }) {
 
   const wcRefs = useRef({});
   const autoConnected = useRef(false);
+  const contractCache = useRef(new Map());
 
   const switchNetwork = useCallback(async (networkKey = 'eth') => {
     const net = NETWORKS[networkKey];
@@ -145,6 +147,53 @@ export function Web3Provider({ children }) {
     }
   }, [connect]);
 
+  // Clear cached contract instances when network/provider changes.
+  useEffect(() => {
+    contractCache.current.clear();
+  }, [provider, chainId]);
+
+  const getContract = useCallback(
+    (abi, address, { withSigner = true } = {}) => {
+      if (!abi || !address || !provider) return null;
+      const cacheKey = `${withSigner ? 'signer' : 'provider'}-${chainId || 'unknown'}-${address.toLowerCase()}`;
+
+      if (contractCache.current.has(cacheKey)) {
+        return contractCache.current.get(cacheKey);
+      }
+
+      const instance = new ethers.Contract(
+        address,
+        abi,
+        withSigner ? provider.getSigner() : provider
+      );
+      contractCache.current.set(cacheKey, instance);
+      return instance;
+    },
+    [provider, chainId]
+  );
+
+  const readContract = useCallback(
+    async (abi, address, method, args = []) => {
+      const contract = getContract(abi, address, { withSigner: false });
+      if (!contract || typeof contract[method] !== 'function') {
+        throw new Error('Contract method unavailable');
+      }
+      return contract[method](...args);
+    },
+    [getContract]
+  );
+
+  const writeContract = useCallback(
+    async (abi, address, method, args = [], overrides = {}) => {
+      const contract = getContract(abi, address, { withSigner: true });
+      if (!contract || typeof contract[method] !== 'function') {
+        throw new Error('Contract method unavailable');
+      }
+      return contract[method](...args, overrides);
+    },
+    [getContract]
+  );
+
   const signer = useMemo(() => (library ? library.getSigner() : null), [library]);
   const provider = library;
 
@@ -159,8 +208,23 @@ export function Web3Provider({ children }) {
       connectWalletConnect: (networkKey = 'eth') => connect('walletconnect', networkKey),
       disconnectWallet,
       switchNetwork,
+      getContract,
+      readContract,
+      writeContract,
     }),
-    [account, chainId, provider, signer, active, connect, disconnectWallet, switchNetwork]
+    [
+      account,
+      chainId,
+      provider,
+      signer,
+      active,
+      connect,
+      disconnectWallet,
+      switchNetwork,
+      getContract,
+      readContract,
+      writeContract,
+    ]
   );
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;

@@ -24,7 +24,7 @@ const Opened = () => {
   const [alertMsg, setAlertMsg] = useState('');
   const [openAlert, setOpenAlert] = useState(false);
 
-  const { account, provider } = useWeb3();
+  const { account, provider, getContract, writeContract } = useWeb3();
 
   const getNetwork = () => {
     const current = normalizeChainId(provider?.provider?.chainId || '');
@@ -59,11 +59,6 @@ const Opened = () => {
     setPresaleState('');
   };
 
-  const getContract = (abi, address, signer = null) => {
-    const signerOrProvider = signer;
-    return new ethers.Contract(address, abi, signerOrProvider);
-  };
-
   const getInfo = async (network) => {
     if (!account) {
       setOpenAlert(true);
@@ -71,8 +66,12 @@ const Opened = () => {
       return null;
     }
 
-    const signer = await provider.getSigner();
-    const presalecontract = getContract(PRESALE_ABI, network.contractAddress, signer);
+    const presalecontract = getContract(PRESALE_ABI, network.contractAddress);
+    if (!presalecontract) {
+      setOpenAlert(true);
+      setAlertMsg('Unable to load presale contract');
+      return null;
+    }
     const chainSuffix = network.currencyLabel || network.symbol;
 
     let tokenrate;
@@ -208,7 +207,7 @@ const Opened = () => {
     }
   };
 
-  const withContract = async (action) => {
+  const withContract = async () => {
     if (!account) {
       setOpenAlert(true);
       setAlertMsg('Wallet is unconnected');
@@ -220,13 +219,19 @@ const Opened = () => {
       setAlertMsg('Selected chain is unrecognized');
       return null;
     }
-    const signer = await provider.getSigner();
-    return getContract(PRESALE_ABI, activeNet.contractAddress, signer);
+    const contract = getContract(PRESALE_ABI, activeNet.contractAddress);
+    if (!contract) {
+      setOpenAlert(true);
+      setAlertMsg('Unable to load presale contract');
+      return null;
+    }
+    return { activeNet };
   };
 
   const Deposit = async (amount) => {
-    const presalecontract = await withContract();
-    if (!presalecontract) return;
+    const withCtx = await withContract();
+    if (!withCtx) return;
+    const { contract, activeNet } = withCtx;
     if (!amount || amount <= 0) {
       setOpenAlert(true);
       setAlertMsg('Please enter a valid amount');
@@ -234,7 +239,7 @@ const Opened = () => {
     }
     const overrid = { value: ethers.utils.parseUnits(amount.toString(), 18) };
     try {
-      await presalecontract.userDeposit(overrid);
+      await writeContract(PRESALE_ABI, activeNet.contractAddress, 'userDeposit', [], overrid);
       setOpenAlert(true);
       setAlertMsg('Deposit done successfully');
     } catch (error) {
@@ -244,10 +249,11 @@ const Opened = () => {
   };
 
   const Withdraw = async () => {
-    const presalecontract = await withContract();
-    if (!presalecontract) return;
+    const withCtx = await withContract();
+    if (!withCtx) return;
+    const { activeNet } = withCtx;
     try {
-      await presalecontract.userWithdrawBaseTokens();
+      await writeContract(PRESALE_ABI, activeNet.contractAddress, 'userWithdrawBaseTokens');
       setOpenAlert(true);
       setAlertMsg('Withdraw done successfully');
     } catch (error) {
@@ -257,10 +263,11 @@ const Opened = () => {
   };
 
   const Claim = async () => {
-    const presalecontract = await withContract();
-    if (!presalecontract) return;
+    const withCtx = await withContract();
+    if (!withCtx) return;
+    const { activeNet } = withCtx;
     try {
-      await presalecontract.userWithdrawTokens();
+      await writeContract(PRESALE_ABI, activeNet.contractAddress, 'userWithdrawTokens');
       setOpenAlert(true);
       setAlertMsg('Claim done successfully');
     } catch (error) {
